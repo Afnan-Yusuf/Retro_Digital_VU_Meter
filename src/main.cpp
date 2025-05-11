@@ -26,8 +26,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define CENTER_X 64      // Center of display horizontally
 #define CENTER_Y 75      // Move pivot point higher up in the display
 #define RADIUS 80        // Smaller radius to ensure everything fits
-#define MIN_ANGLE 180    // Start angle in degrees (left side)
-#define MAX_ANGLE 360     // End angle in degrees (right side)
+#define MIN_ANGLE 220    // Start angle in degrees (left side)
+#define MAX_ANGLE 320     // End angle in degrees (right side)
 
 // Variables for audio processing
 float currentLevel = 0;
@@ -73,7 +73,7 @@ void loop() {
   }
   
   // Map to 0-100 range and apply logarithmic scaling to mimic real VU meter
-  float newLevel = map(maxSample, 0, 512, 0, 100);
+  float newLevel = map(analogRead(AUDIO_PIN), 0, 100, MIN_ANGLE, MAX_ANGLE);
   newLevel = constrain(newLevel, 0, 100);
   
   // Smooth the meter movement
@@ -93,7 +93,8 @@ void loop() {
     peakLevel = max(0, peakLevel - 0.5);
   }
   
-  updateNeedle();
+  updateNeedle(currentLevel);
+  
   
   delay(30);
 }
@@ -104,9 +105,9 @@ void loop() {
   
 
 
-void updateNeedle() {
+void updateNeedle(float angle) {
   // Calculate the angle based on current level (0-100)
-  float angle = MIN_ANGLE - (currentLevel * (MIN_ANGLE - MAX_ANGLE) / 100.0);
+  
   float rad = angle * PI / 180.0;
   
   // Calculate needle endpoints
