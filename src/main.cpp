@@ -36,7 +36,7 @@ unsigned long peakHoldTime = 0;
 const unsigned long PEAK_HOLD_DURATION = 1000; // Hold peak for 1 second
 
 void drawStaticMeterElements();
-void updateNeedle();
+void updateNeedle(float angle);
 void setup() {
   Serial.begin(9600);
   
@@ -71,10 +71,10 @@ void loop() {
       maxSample = sample;
     }
   }
-  
+  int raw = abs(analogRead(AUDIO_PIN)-512);
   // Map to 0-100 range and apply logarithmic scaling to mimic real VU meter
-  float newLevel = map(analogRead(AUDIO_PIN), 0, 100, MIN_ANGLE, MAX_ANGLE);
-  newLevel = constrain(newLevel, 0, 100);
+  float newLevel = map(raw, 0, 512, MIN_ANGLE, MAX_ANGLE);
+  
   
   // Smooth the meter movement
   currentLevel = (currentLevel * SMOOTH_FACTOR) + (newLevel * (1 - SMOOTH_FACTOR));
@@ -92,8 +92,12 @@ void loop() {
 
     peakLevel = max(0, peakLevel - 0.5);
   }
-  
-  updateNeedle(currentLevel);
+  Serial.print(currentLevel);
+  Serial.print("\t");
+  Serial.print(newLevel);
+  Serial.print("\t");
+  Serial.println(analogRead(AUDIO_PIN));
+  updateNeedle(newLevel);
   
   
   delay(30);
