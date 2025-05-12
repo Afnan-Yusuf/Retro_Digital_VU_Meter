@@ -71,10 +71,10 @@ void loop() {
       maxSample = sample;
     }
   }
-  int raw = abs(analogRead(AUDIO_PIN)-512);
-  // Map to 0-100 range and apply logarithmic scaling to mimic real VU meter
-  float newLevel = map(raw, 0, 512, MIN_ANGLE, MAX_ANGLE);
   
+  // Map to 0-100 range and apply scaling
+  float newLevel = map(maxSample, 0, 512, 0, 100);
+  newLevel = constrain(newLevel, 0, 100);
   
   // Smooth the meter movement
   currentLevel = (currentLevel * SMOOTH_FACTOR) + (newLevel * (1 - SMOOTH_FACTOR));
@@ -89,17 +89,25 @@ void loop() {
     peakLevel = currentLevel;
     peakHoldTime = millis();
   } else if (millis() - peakHoldTime > PEAK_HOLD_DURATION) {
-
+    // Start slowly dropping the peak level after hold time
     peakLevel = max(0, peakLevel - 0.5);
   }
+  
+  // Calculate the angle based on current level (0-100)
+  float angle = MIN_ANGLE - (currentLevel * (MIN_ANGLE - MAX_ANGLE) / 100.0);
+  
+  // Update the needle display with the calculated angle
+  updateNeedle(angle);
   Serial.print(currentLevel);
   Serial.print("\t");
   Serial.print(newLevel);
   Serial.print("\t");
-  Serial.println(analogRead(AUDIO_PIN));
-  updateNeedle(newLevel);
-  
-  
+  Serial.print(peakLevel);
+  Serial.print("\t");
+  Serial.print(analogRead(AUDIO_PIN));
+  Serial.print("\t");
+  Serial.println(angle);
+  // Small delay to avoid flicker and control update rate
   delay(30);
 }
 
