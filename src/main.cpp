@@ -15,12 +15,12 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Audio input pin
-#define AUDIO_PIN A0
+#define AUDIO_PIN A1
 
 // VU meter parameters
 #define SAMPLES 64        // Number of samples to take
 #define DECAY_RATE 0.85   // How quickly the meter falls (0-1)
-#define SMOOTH_FACTOR 0.7 // For smoothing needle movement (0-1)
+#define SMOOTH_FACTOR 0.4 // For smoothing needle movement (0-1)
 
 // Center position of the meter dial
 #define CENTER_X 64      // Center of display horizontally
