@@ -1,6 +1,6 @@
 /**
- * Analog Style VU Meter with Needle for 128x64 OLED Display
- * Uses Arduino to read audio signal from analog pin and display as needle type meter
+ * Classic Analog VU Meter for 128x64 OLED Display
+ * Uses Arduino to read audio signal with needle pivot below display
  */
 
 #include <Wire.h>
@@ -15,27 +15,25 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Audio input pin
-#define AUDIO_PIN A0
+#define AUDIO_PIN A1
 
 // VU meter parameters
 #define SAMPLES 64        // Number of samples to take
 #define DECAY_RATE 0.85   // How quickly the meter falls (0-1)
-#define SMOOTH_FACTOR 0.7 // For smoothing needle movement (0-1)
+#define SMOOTH_FACTOR 0.4 // For smoothing needle movement (0-1)
 
 // Center position of the meter dial
 #define CENTER_X 64      // Center of display horizontally
-#define CENTER_Y 75      // Move pivot point higher up in the display
-#define RADIUS 80        // Smaller radius to ensure everything fits
+#define CENTER_Y 70      // Pivot point below display area
+#define RADIUS 100        // Radius for needle length
 #define MIN_ANGLE 220    // Start angle in degrees (left side)
-#define MAX_ANGLE 320     // End angle in degrees (right side)
+#define MAX_ANGLE 320    // End angle in degrees (right side)
 
 // Variables for audio processing
 float currentLevel = 0;
 float peakLevel = 0;
 unsigned long peakHoldTime = 0;
 const unsigned long PEAK_HOLD_DURATION = 1000; // Hold peak for 1 second
-
-void drawStaticMeterElements();
 void updateNeedle(float angle);
 void setup() {
   Serial.begin(9600);
@@ -46,16 +44,9 @@ void setup() {
     for(;;); // Don't proceed, loop forever
   }
   
-  // Initial display
+  // Initial blank display
   display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(30, 0);
-  display.println("Analog VU Meter");
   display.display();
-  delay(1000);
-  
-
 }
 
 void loop() {
@@ -77,7 +68,7 @@ void loop() {
   newLevel = constrain(newLevel, 0, 100);
   
   // Smooth the meter movement
-  currentLevel = (currentLevel * SMOOTH_FACTOR) + (newLevel * (1 - SMOOTH_FACTOR));
+  currentLevel = (currentLevel * SMOOTH_FACTOR) + (newLevel * (1 - SMOOTH_FACTOR)) *2;
   
   // Apply decay effect for natural fall-back
   if (currentLevel > 0) {
@@ -98,28 +89,20 @@ void loop() {
   
   // Update the needle display with the calculated angle
   updateNeedle(angle);
-  Serial.print(currentLevel);
-  Serial.print("\t");
   Serial.print(newLevel);
+  Serial.print("\t");
+  Serial.print(currentLevel);
   Serial.print("\t");
   Serial.print(peakLevel);
   Serial.print("\t");
-  Serial.print(analogRead(AUDIO_PIN));
-  Serial.print("\t");
   Serial.println(angle);
+  
   // Small delay to avoid flicker and control update rate
   delay(30);
 }
 
-
-  
-
-  
-
-
 void updateNeedle(float angle) {
   // Calculate the angle based on current level (0-100)
-  
   float rad = angle * PI / 180.0;
   
   // Calculate needle endpoints
@@ -138,8 +121,6 @@ void updateNeedle(float angle) {
   // Draw new needle with a thicker style for better visibility
   display.drawLine(CENTER_X, CENTER_Y, needleEndX, needleEndY, SSD1306_WHITE);
   
-
-  
   // Draw peak indicator (small triangle at peak position)
   display.fillTriangle(
     peakX, peakY,
@@ -147,7 +128,7 @@ void updateNeedle(float angle) {
     peakX + 2, peakY - 2,
     SSD1306_WHITE);
   
-    display.setCursor(5, 58);
+  display.setCursor(5, 58);
   display.print("-dB");
   display.setCursor(110, 58);
   display.print("+dB");
